@@ -10,6 +10,11 @@
     <p id="chatResponse"></p>
 
     <script>
+    document.getElementById('userInput').addEventListener('keypress', function (e) {
+    if (e.key === 'Enter') {
+        sendMessage();
+    }
+    });
     function sendMessage() {
         var userInput = document.getElementById('userInput').value;
         fetch('/chat', {
@@ -21,8 +26,13 @@
         })
         .then(response => response.json())
         .then(data => {
-            document.getElementById('chatResponse').innerText = data.response;
-        });    
+            document.getElementById('chatResponse').innerText = data.response || 'Error: No response';
+        })
+        .catch(error => console.error('Error:', error));
+
+        // Clear input field after sending the message
+        document.getElementById('userInput').value = '';
+   
     }
     </script>
 </body>
