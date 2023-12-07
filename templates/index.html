@@ -2,22 +2,42 @@
 <html>
 <head>
     <title>Rep Letter Assistant</title>
+    <style>
+        #chatHistory {
+            height: 300px;
+            overflow-y: auto;
+            border: 1px solid #ccc;
+            padding: 10px;
+            margin-bottom: 10px;
+        }
+    </style>
 </head>
 <body>
     <h1>Rep Letter Assistant</h1>
-    <h2>Welcome to Rep Letter Assistant- an AI assistant that will help you write a letter to you civil representative</h2>
-    <input type="text" id="userInput" placeholder="Ask something...">
+    <h2>Welcome to Rep Letter Assistant- an AI assistant that will help you write a letter to your civil representative</h2>
+    <div id="chatHistory"></div> <!-- Chat history will be displayed here -->
+    <input type="text" id="userInput" placeholder="Ask something..." style="width: 500px;">
     <button onclick="sendMessage()">Send</button>
     <p id="chatResponse"></p>
 
     <script>
     document.getElementById('userInput').addEventListener('keypress', function (e) {
-    if (e.key === 'Enter') {
-        sendMessage();
-    }
+        if (e.key === 'Enter') {
+            sendMessage();
+        }
     });
+
+    function appendMessageToHistory(role, message) {
+        const chatHistory = document.getElementById('chatHistory');
+        const messageElement = document.createElement('p');
+        messageElement.textContent = `${role}: ${message}`;
+        chatHistory.appendChild(messageElement);
+        chatHistory.scrollTop = chatHistory.scrollHeight; // Auto-scroll to the latest message
+    }
+
     function sendMessage() {
         var userInput = document.getElementById('userInput').value;
+        appendMessageToHistory('You', userInput); // Append user message to history
         fetch('/chat', {
             method: 'POST',
             headers: {
@@ -27,13 +47,12 @@
         })
         .then(response => response.json())
         .then(data => {
-            document.getElementById('chatResponse').innerText = data.response || 'Error: No response';
+            appendMessageToHistory('Bot', data.response || 'Error: No response'); // Append bot response to history
         })
         .catch(error => console.error('Error:', error));
 
         // Clear input field after sending the message
         document.getElementById('userInput').value = '';
-   
     }
     </script>
 </body>
