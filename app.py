@@ -36,14 +36,6 @@ def create_thread(ass_id, prompt):
 
     return run.id, my_thread_id
 
-#check run status
-def check_status(run_id, thread_id):
-    run = openai.beta.threads.runs.retrieve(
-        thread_id=thread_id,
-        run_id=run_id,
-    )
-    return run.status
-
 @app.route('/')
 def home():
     return render_template('index.html')
@@ -54,28 +46,17 @@ def chat():
     print("Received request:", request.json) # Logs the received message
 
     try:
-        assistant_id = "asst_JZnFQkifZLY3r1C5uaL1cgpg"  # Replace with your assistant ID
+        assistant_id = "asst_JZnFQkifZLY3r1C5uaL1cgpg"
         my_run_id, my_thread_id = create_thread(assistant_id, user_input)
-
-        status = check_status(my_run_id, my_thread_id)
-
-        while status != "completed":
-            status = check_status(my_run_id, my_thread_id)
-            time.sleep(1)
-
-        response = openai.beta.threads.messages.list(
-            thread_id=my_thread_id
-        )
-        print("Sending response with Thread ID:", response)  # Logs the response being sent back
+        time.sleep(10)
+        # Assuming immediate response, get the latest response
+        response = openai.beta.threads.messages.list(thread_id=my_thread_id)
+        #if response.data:
+        #    chat_response = response.data[-1].content[0].text.value
+        print("Sending response with Thread ID:", response)
         return jsonify({'response': f"{response}\n\nThread ID: {my_thread_id}"})
-        '''
-        if response.data:
-            chat_response = response.data[-1].content[0].text.value
-            print("Sending response with Thread ID:", chat_response)  # Logs the response being sent back
-            return jsonify({'response': f"{chat_response}\n\nThread ID: {my_thread_id}"})
-        '''
     except Exception as e:
-        print("Error:", str(e))  # Logs the error if occurred
+        print("Error:", str(e))
         return jsonify({'error': str(e)})
 
 if __name__ == '__main__':
