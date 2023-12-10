@@ -61,19 +61,16 @@ def chat():
 
         while status != "completed":
             status = check_status(my_run_id, my_thread_id)
-            time.sleep(1)
+            time.sleep(2)
 
         response = openai.beta.threads.messages.list(
             thread_id=my_thread_id
         )
-        print("Sending response with Thread ID:", response)  # Logs the response being sent back
-        return jsonify({'response': f"{response}\n\nThread ID: {my_thread_id}"})
-        '''
+
         if response.data:
-            chat_response = response.data[-1].content[0].text.value
-            print("Sending response with Thread ID:", chat_response)  # Logs the response being sent back
-            return jsonify({'response': f"{chat_response}\n\nThread ID: {my_thread_id}"})
-        '''
+            chat_response = response.data[0].content[0].text.value
+            print("Sending response:", chat_response)  # Logs the response being sent back
+            return jsonify({'response': chat_response})
     except Exception as e:
         print("Error:", str(e))  # Logs the error if occurred
         return jsonify({'error': str(e)})
