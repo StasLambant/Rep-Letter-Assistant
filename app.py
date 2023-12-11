@@ -69,7 +69,7 @@ def chat():
 
         if response.data:
             chat_response = response.data[0].content[0].text.value
-            print("Sending response:", chat_response)  # Logs the response being sent back
+            print("Sending response:", response)  # Logs the response being sent back
             return jsonify({'response': chat_response})
     except Exception as e:
         print("Error:", str(e))  # Logs the error if occurred

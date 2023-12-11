@@ -3,57 +3,120 @@
 <head>
     <title>Rep Letter Assistant</title>
     <style>
+
+        html, body {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif; /* Added a font for better readability */
+        }
+
+        .chat-container {
+            width: 45%;
+            margin: 0 auto; /* Center the chat container */
+            display: flex;
+            flex-direction: column; /* Stack children vertically */
+            align-items: center; /* Center children horizontally */
+        }
+
         #chatHistory {
+            width: 100%; /* Match width with the parent container */
             height: 300px;
             overflow-y: auto;
-            border: 1px solid #ccc;
+            border: none;
             padding: 10px;
             margin-bottom: 10px;
+            box-sizing: border-box; /* Include padding in the width */
+        }
+
+        .input-container {
+            display: flex;
+            border: 1px solid #686868; /* 1 pixel frame */
+            border-radius: 20px; /* Rounded edges */
+            padding: 5px;
+            align-items: center;
+            width: 100%;
+            margin: 0 auto; /* Centers the container */
+        }
+
+        textarea {
+            flex-grow: 1;
+            min-height: 50px;
+            overflow-y: hidden; /* Hide vertical scrollbar */
+            border: none;
+            border-radius: 20px;
+            padding: 10px;
+            resize: none; /* Disable manual resizing */
+            margin-right: 10px; /* Space between textarea and button */
+            outline: none; /* Disable the black border on focus */
+        }
+
+        button {
+            border: none;
+            background-color: #000; /* Black background for button */
+            color: #fff; /* White text */
+            padding: 10px 20px;
+            border-radius: 20px; /* Rounded edges for button */
+            cursor: pointer; /* Cursor indicates clickable button */
+        }
+
+        button:hover {
+            background-color: #333; /* Darker background on hover */
         }
     </style>
 </head>
 <body>
     <h1>Rep Letter Assistant</h1>
     <h2>Welcome to Rep Letter Assistant- an AI assistant that will help you write a letter to your civil representative</h2>
-    <div id="chatHistory"></div> <!-- Chat history will be displayed here -->
-    <input type="text" id="userInput" placeholder="Ask something..." style="width: 500px;">
-    <button onclick="sendMessage()">Send</button>
-    <p id="chatResponse"></p>
+    
+    <div class="chat-container">
+        <div id="chatHistory"></div> <!-- Chat history will be displayed here -->
+        <div class="input-container">
+            <textarea id="userInput" placeholder="Ask something..." oninput="autoGrowTextArea(this)"></textarea>
+            <button onclick="sendMessage()">&#x27A4;</button> <!-- This is a Unicode right arrow -->
+        </div>
+        <p id="chatResponse"></p>
+    </div>
 
     <script>
-    document.getElementById('userInput').addEventListener('keypress', function (e) {
-        if (e.key === 'Enter') {
-            sendMessage();
+        document.getElementById('userInput').addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') {
+                e.preventDefault(); // Prevents the default action of the enter key
+                sendMessage();
+            }
+        });
+
+        function autoGrowTextArea(textArea) {
+            textArea.style.height = 'auto';
+            textArea.style.height = textArea.scrollHeight + 'px';
         }
-    });
 
-    function appendMessageToHistory(role, message) {
-        const chatHistory = document.getElementById('chatHistory');
-        const messageElement = document.createElement('p');
-        messageElement.textContent = `${role}: ${message}`;
-        chatHistory.appendChild(messageElement);
-        chatHistory.scrollTop = chatHistory.scrollHeight; // Auto-scroll to the latest message
-    }
+        function appendMessageToHistory(role, message) {
+            const chatHistory = document.getElementById('chatHistory');
+            const messageElement = document.createElement('p');
+            messageElement.textContent = `${role}: ${message}`;
+            chatHistory.appendChild(messageElement);
+            chatHistory.scrollTop = chatHistory.scrollHeight; // Auto-scroll to the latest message
+        }
 
-    function sendMessage() {
-        var userInput = document.getElementById('userInput').value;
-        appendMessageToHistory('You', userInput); // Append user message to history
-        fetch('/chat', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ message: userInput }),
-        })
-        .then(response => response.json())
-        .then(data => {
-            appendMessageToHistory('Bot', data.response || 'Error: No response'); // Append bot response to history
-        })
-        .catch(error => console.error('Error:', error));
+        function sendMessage() {
+            var userInput = document.getElementById('userInput').value;
+            appendMessageToHistory('You', userInput); // Append user message to history
+            fetch('/chat', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ message: userInput }),
+            })
+            .then(response => response.json())
+            .then(data => {
+                appendMessageToHistory('Bot', data.response || 'Error: No response'); // Append bot response to history
+            })
+            .catch(error => console.error('Error:', error));
 
-        // Clear input field after sending the message
-        document.getElementById('userInput').value = '';
-    }
+            // Clear input field after sending the message
+            document.getElementById('userInput').value = '';
+        }
     </script>
 </body>
 </html>
