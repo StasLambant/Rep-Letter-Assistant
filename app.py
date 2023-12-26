@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, request, jsonify, session
 import openai
 import os
 import time
@@ -61,7 +61,7 @@ def chat():
 
         while status != "completed":
             status = check_status(my_run_id, my_thread_id)
-            time.sleep(2)
+            time.sleep(1)
 
         response = openai.beta.threads.messages.list(
             thread_id=my_thread_id
@@ -76,4 +76,4 @@ def chat():
         return jsonify({'error': str(e)})
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(host='0.0.0.0', port=80, debug=False)

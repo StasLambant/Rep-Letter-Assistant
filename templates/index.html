@@ -3,64 +3,79 @@
 <head>
     <title>Rep Letter Assistant</title>
     <style>
-
         html, body {
             margin: 0;
             padding: 0;
-            font-family: Arial, sans-serif; /* Added a font for better readability */
+            font-family: Arial, sans-serif;
+            height: 100%;
+            overflow: auto; /* Enable scrolling for the whole page */
+        }
+
+        h1, h2 {
+            text-align: center; /* Centering the titles */
         }
 
         .chat-container {
             width: 45%;
-            margin: 0 auto; /* Center the chat container */
+            margin: 20px auto;
             display: flex;
-            flex-direction: column; /* Stack children vertically */
-            align-items: center; /* Center children horizontally */
+            flex-direction: column;
+            align-items: center;
+            overflow-y: auto; 
+            position: relative;
+            padding-bottom: 60px; /* Initial bottom padding */
+            border: 1px solid #969696;
         }
 
         #chatHistory {
-            width: 100%; /* Match width with the parent container */
-            height: 300px;
+            width: 100%;
             overflow-y: auto;
-            border: none;
+            border: 1px solid #969696;
             padding: 10px;
-            margin-bottom: 10px;
-            box-sizing: border-box; /* Include padding in the width */
+            box-sizing: border-box;
+            word-wrap: break-word; /* Ensure long words are wrapped */
         }
 
         .input-container {
+            position: fixed; /* Fixed position */
+            bottom: 0; /* Align to the bottom */
+            left: 50%; /* Center horizontally */
+            transform: translateX(-50%); /* Precise centering */
+            width: 45%; /* Match width with chatHistory */
             display: flex;
-            border: 1px solid #686868; /* 1 pixel frame */
-            border-radius: 20px; /* Rounded edges */
+            border: 1px solid #969696;
+            border-radius: 20px;
             padding: 5px;
-            align-items: center;
-            width: 100%;
-            margin: 0 auto; /* Centers the container */
+            align-items: flex-end;
+            background: white;
+            z-index: 1000;
         }
 
         textarea {
             flex-grow: 1;
-            min-height: 50px;
-            overflow-y: hidden; /* Hide vertical scrollbar */
+            min-height: 20px;
+            max-height: 120px;
+            overflow-y: auto;
             border: none;
-            border-radius: 20px;
+            border-radius: 20px 0 0 20px;
             padding: 10px;
-            resize: none; /* Disable manual resizing */
-            margin-right: 10px; /* Space between textarea and button */
-            outline: none; /* Disable the black border on focus */
+            resize: none;
+            outline: none;
         }
 
         button {
+            width: 40px;
+            height: 40px;
             border: none;
-            background-color: #000; /* Black background for button */
-            color: #fff; /* White text */
-            padding: 10px 20px;
-            border-radius: 20px; /* Rounded edges for button */
-            cursor: pointer; /* Cursor indicates clickable button */
+            background-color: #000;
+            color: #fff;
+            border-radius: 50%;
+            cursor: pointer;
+            align-self: center;
         }
 
         button:hover {
-            background-color: #333; /* Darker background on hover */
+            background-color: #333;
         }
     </style>
 </head>
@@ -68,26 +83,40 @@
     <h1>Rep Letter Assistant</h1>
     <h2>Welcome to Rep Letter Assistant- an AI assistant that will help you write a letter to your civil representative</h2>
     
-    <div class="chat-container">
+    <div class="chat-container" id="chatContainer">
         <div id="chatHistory"></div> <!-- Chat history will be displayed here -->
-        <div class="input-container">
-            <textarea id="userInput" placeholder="Ask something..." oninput="autoGrowTextArea(this)"></textarea>
-            <button onclick="sendMessage()">&#x27A4;</button> <!-- This is a Unicode right arrow -->
-        </div>
-        <p id="chatResponse"></p>
+    </div>
+    <div class="input-container">
+        <textarea id="userInput" placeholder="Ask something..." oninput="autoGrowTextArea(this)"></textarea>
+        <button onclick="sendMessage()">&#x2B06;</button> <!-- Unicode up-pointing arrow -->
     </div>
 
     <script>
         document.getElementById('userInput').addEventListener('keypress', function (e) {
             if (e.key === 'Enter') {
-                e.preventDefault(); // Prevents the default action of the enter key
+                e.preventDefault();
                 sendMessage();
             }
         });
 
         function autoGrowTextArea(textArea) {
             textArea.style.height = 'auto';
-            textArea.style.height = textArea.scrollHeight + 'px';
+            var maxHeight = 120; // Max height for 7.5 lines of text
+            textArea.style.height = textArea.scrollHeight > maxHeight ? `${maxHeight}px` : `${textArea.scrollHeight}px`;
+            adjustChatContainerHeight();
+        }
+
+        function adjustChatContainerHeight() {
+            const inputContainerHeight = document.querySelector('.input-container').offsetHeight;
+            const chatContainer = document.getElementById('chatContainer');
+            chatContainer.style.paddingBottom = `${inputContainerHeight + 20}px`;
+        }
+
+        function scrollToBottom() {
+            const chatHistory = document.getElementById('chatHistory');
+            const scrollHeight = chatHistory.scrollHeight;
+            const scrollTime = 500; // Time in milliseconds
+            chatHistory.animate({ scrollTop: scrollHeight }, scrollTime);
         }
 
         function appendMessageToHistory(role, message) {
@@ -95,12 +124,12 @@
             const messageElement = document.createElement('p');
             messageElement.textContent = `${role}: ${message}`;
             chatHistory.appendChild(messageElement);
-            chatHistory.scrollTop = chatHistory.scrollHeight; // Auto-scroll to the latest message
+            scrollToBottom();
         }
 
         function sendMessage() {
             var userInput = document.getElementById('userInput').value;
-            appendMessageToHistory('You', userInput); // Append user message to history
+            appendMessageToHistory('You', userInput);
             fetch('/chat', {
                 method: 'POST',
                 headers: {
@@ -111,12 +140,25 @@
             .then(response => response.json())
             .then(data => {
                 appendMessageToHistory('Bot', data.response || 'Error: No response'); // Append bot response to history
+                document.getElementById('userInput').style.height = '20px'; // Reset textarea height
             })
             .catch(error => console.error('Error:', error));
 
             // Clear input field after sending the message
             document.getElementById('userInput').value = '';
         }
+
+        // Initial adjustment and scroll when the page loads
+        window.onload = function() {
+            adjustChatContainerHeight();
+            scrollToBottom();
+        };
+
+        // Adjust and scroll when window is resized
+        window.onresize = function() {
+            adjustChatContainerHeight();
+            scrollToBottom();
+        };
     </script>
 </body>
 </html>
