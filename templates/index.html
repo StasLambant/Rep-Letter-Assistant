@@ -9,43 +9,74 @@
             font-family: Arial, sans-serif;
             height: 100%;
             overflow: auto; /* Enable scrolling for the whole page */
+            display: flex;
+            flex-direction: column;
         }
 
-        h1, h2 {
+        h1, h2, h3 {
             text-align: center; /* Centering the titles */
         }
 
+        .header-container {
+            position: relative;
+            height: 60px;
+            width: 100%;
+            top: 0;
+            /*left: 50%; /* Set left to 50% of the viewport width */
+            /*transform: translateX(-50%); /* Move the header back to the left by half of its own width */
+            background-color: #fff;
+            z-index: 1000;
+            border: 0px solid #000;
+        }
+
+        .chat-wrapper {
+            position: relative;
+            height: calc(100vh - 78px);
+            width: 100%;
+            padding-top: 0px; /* Height of the header */
+            padding-bottom: 0px; /* Height of the footer */
+            flex-grow: 1; /* Allow this to take up available space */
+            overflow: auto;
+            border: 0px solid #000;
+        }
+
         .chat-container {
+            margin: 0 auto;
             width: 45%;
-            margin: 20px auto;
             display: flex;
             flex-direction: column;
             align-items: center;
             overflow-y: auto; 
             position: relative;
-            padding-bottom: 60px; /* Initial bottom padding */
-            border: 1px solid #969696;
+            padding-bottom: 0px; /* Initial bottom padding */
+            top: 0px;
+            bottom: 0px;
+            border: 0px solid #969696;
+            height: 88%;
         }
 
         #chatHistory {
+            position:relative;
+            height: 100%;
             width: 100%;
             overflow-y: auto;
-            border: 1px solid #969696;
-            padding: 10px;
+            border: 0px solid #969696;
+            padding: 0px;
             box-sizing: border-box;
-            word-wrap: break-word; /* Ensure long words are wrapped */
+            word-wrap: break-word;
+            border: 1px #000; /* Ensure long words are wrapped */
         }
 
         .input-container {
-            position: fixed; /* Fixed position */
-            bottom: 0; /* Align to the bottom */
+            position: sticky; /* Absolute position */
+            bottom: 0px;
             left: 50%; /* Center horizontally */
             transform: translateX(-50%); /* Precise centering */
             width: 45%; /* Match width with chatHistory */
             display: flex;
             border: 1px solid #969696;
             border-radius: 20px;
-            padding: 5px;
+            padding: 0;
             align-items: flex-end;
             background: white;
             z-index: 1000;
@@ -77,19 +108,45 @@
         button:hover {
             background-color: #333;
         }
+
+        /* Footer Styles */
+        .footer {
+            text-align: center;
+            font-size: small;
+            position: relative;
+            left: 0;
+            bottom: 0;
+            width: 100%;
+            height: 18px;
+            background-color: #aeadad; /* Change as needed */
+            color: black; /* Change as needed */
+            padding: 0px;
+            z-index: 999; /* Ensure footer is below input-container */
+        }
+
+        .footer a {
+            color: rgb(36, 43, 255); /* Change as needed */
+        }
     </style>
 </head>
 <body>
-    <h1>Rep Letter Assistant</h1>
-    <h2>Welcome to Rep Letter Assistant- an AI assistant that will help you write a letter to your civil representative</h2>
-    
-    <div class="chat-container" id="chatContainer">
-        <div id="chatHistory"></div> <!-- Chat history will be displayed here -->
-    </div>
-    <div class="input-container">
-        <textarea id="userInput" placeholder="Ask something..." oninput="autoGrowTextArea(this)"></textarea>
-        <button onclick="sendMessage()">&#x2B06;</button> <!-- Unicode up-pointing arrow -->
-    </div>
+        <div class="header-container">
+            <h3><u>AI assistant to help you write a letter to your political representative</u></h3>
+        </div>
+
+        <div class="chat-wrapper">    
+            <div class="chat-container">
+                <div id="chatHistory"></div> <!-- Chat history will be displayed here -->
+            </div>
+            <div class="input-container">
+                <textarea id="userInput" placeholder="Ask something..." oninput="autoGrowTextArea(this)"></textarea>
+                <button onclick="sendMessage()">&#x2B06;</button> <!-- Unicode up-pointing arrow -->
+            </div>
+        </div>
+
+        <div class="footer">Developed by Stas Lambant. For feedback email 
+            <a href="mailto:kpebedko_1@hotmail.com">kpebedko_1@hotmail.com</a>
+        </div>
 
     <script>
         document.getElementById('userInput').addEventListener('keypress', function (e) {
@@ -114,22 +171,24 @@
 
         function scrollToBottom() {
             const chatHistory = document.getElementById('chatHistory');
-            const scrollHeight = chatHistory.scrollHeight;
-            const scrollTime = 500; // Time in milliseconds
-            chatHistory.animate({ scrollTop: scrollHeight }, scrollTime);
-        }
+            chatHistory.scrollTop = chatHistory.scrollHeight;
+        };
 
-        function appendMessageToHistory(role, message) {
+        function appendMessageToHistory(role, message, threadId) {
             const chatHistory = document.getElementById('chatHistory');
             const messageElement = document.createElement('p');
-            messageElement.textContent = `${role}: ${message}`;
+            if (threadId) {
+                messageElement.textContent = `${role} [Thread: ${threadId}]: ${message}`;
+            } else {
+                messageElement.textContent = `${role}: ${message}`;
+            }
             chatHistory.appendChild(messageElement);
             scrollToBottom();
         }
 
         function sendMessage() {
             var userInput = document.getElementById('userInput').value;
-            appendMessageToHistory('You', userInput);
+            appendMessageToHistory('You', userInput); // Append user message to history
             fetch('/chat', {
                 method: 'POST',
                 headers: {
@@ -139,7 +198,7 @@
             })
             .then(response => response.json())
             .then(data => {
-                appendMessageToHistory('Bot', data.response || 'Error: No response'); // Append bot response to history
+                appendMessageToHistory('Bot', data.response || 'Error: No response', data.thread_id); // Append bot response to history
                 document.getElementById('userInput').style.height = '20px'; // Reset textarea height
             })
             .catch(error => console.error('Error:', error));
@@ -148,17 +207,18 @@
             document.getElementById('userInput').value = '';
         }
 
-        // Initial adjustment and scroll when the page loads
+        //Initial adjustment and scroll when the page loads
         window.onload = function() {
             adjustChatContainerHeight();
             scrollToBottom();
         };
 
-        // Adjust and scroll when window is resized
+        //Adjust and scroll when window is resized
         window.onresize = function() {
             adjustChatContainerHeight();
             scrollToBottom();
         };
     </script>
+
 </body>
 </html>
