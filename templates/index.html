@@ -174,11 +174,16 @@
             chatHistory.scrollTop = chatHistory.scrollHeight;
         };
 
-        function appendMessageToHistory(role, message, threadId) {
+        function appendMessageToHistory(role, message, threadId, isHtml = false) {
             const chatHistory = document.getElementById('chatHistory');
             const messageElement = document.createElement('p');
             if (threadId) {
-                messageElement.textContent = `${role} [Thread: ${threadId}]: ${message}`;
+                // If the message is HTML (from the bot), set innerHTML, else set textContent
+                if (isHtml) {
+                    messageElement.innerHTML = `${role} [Thread: ${threadId}]: ${message}`;
+                } else {
+                    messageElement.textContent = `${role} [Thread: ${threadId}]: ${message}`;
+                }
             } else {
                 messageElement.textContent = `${role}: ${message}`;
             }
@@ -198,7 +203,7 @@
             })
             .then(response => response.json())
             .then(data => {
-                appendMessageToHistory('Bot', data.response || 'Error: No response', data.thread_id); // Append bot response to history
+                appendMessageToHistory('Bot', data.response || 'Error: No response', data.thread_id, true); // Append bot response to history as HTML
                 document.getElementById('userInput').style.height = '20px'; // Reset textarea height
             })
             .catch(error => console.error('Error:', error));

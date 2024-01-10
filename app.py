@@ -57,7 +57,7 @@ def home():
 def chat():
     user_input = request.json['message']
     app.logger.info(f"Received request: {user_input}")  # Log the received message
-    print("Received request:", request.json) # Prints the received message in dev mode only.
+    #print("Received request:", request.json) # Prints the received message in dev mode only.
 
     try:
         assistant_id = "asst_JZnFQkifZLY3r1C5uaL1cgpg"  # Replace with environment variable
@@ -74,15 +74,15 @@ def chat():
         )
 
         if response.data:
-            chat_response = response.data[0].content[0].text.value
-            chat_response_html = markdown.markdown(chat_response) #Convert markdown to HTML
+            chat_response_html = response.data[0].content[0].text.value
+            #chat_response_html = markdown.markdown(chat_response) #Convert markdown to HTML
             app.logger.info(f"Sending response: {chat_response_html}")  # Log the response being sent back
-            print("Sending response:", response)  # Prints the response being sent back in dev mode only
+            #print("Sending response:", response)  # Prints the response being sent back in dev mode only
             return jsonify({'response': chat_response_html, 'thread_id': my_thread_id})
 
     except Exception as e:
         app.logger.error(f"Error in chat endpoint: {e}")  # Log the error if occurred
-        print("Error:", str(e))  # Prints the error if occurred in dev mode only
+        #print("Error:", str(e))  # Prints the error if occurred in dev mode only
         return jsonify({'error': str(e)})
 
 if __name__ == '__main__':
