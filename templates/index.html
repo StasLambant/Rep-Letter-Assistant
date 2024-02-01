@@ -109,6 +109,10 @@
             background-color: #333;
         }
 
+        #charCount {
+            color:#969696; /* Style for character count */
+        }
+        
         /* Footer Styles */
         .footer {
             text-align: center;
@@ -129,6 +133,15 @@
         }
     </style>
 </head>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-0S9N79BY4C"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-0S9N79BY4C');
+</script>
 <body>
         <div class="header-container">
             <h3><u>AI assistant to help you write a letter to your political representative</u></h3>
@@ -139,12 +152,13 @@
                 <div id="chatHistory"></div> <!-- Chat history will be displayed here -->
             </div>
             <div class="input-container">
-                <textarea id="userInput" placeholder="Ask something..." oninput="autoGrowTextArea(this)"></textarea>
+                <textarea id="userInput" placeholder="Ask something..." maxlength="300" oninput="autoGrowTextArea(this)"></textarea>
+                <span id="charCount">0/CHAR_LIMIT</span> <!-- Character count display -->
                 <button onclick="sendMessage()">&#x2B06;</button> <!-- Unicode up-pointing arrow -->
             </div>
         </div>
 
-        <div class="footer">Developed by Stas Lambant. For feedback email 
+        <div class="footer">Built by Stas Lambant. For feedback email 
             <a href="mailto:kpebedko_1@hotmail.com">kpebedko_1@hotmail.com</a>
         </div>
 
@@ -156,10 +170,17 @@
             }
         });
 
+        const CHAR_LIMIT = 300; // Define the character limit as a global variable
+
         function autoGrowTextArea(textArea) {
             textArea.style.height = 'auto';
             var maxHeight = 120; // Max height for 7.5 lines of text
             textArea.style.height = textArea.scrollHeight > maxHeight ? `${maxHeight}px` : `${textArea.scrollHeight}px`;
+                        
+            var currentLength = textArea.value.length; // Update character count
+
+            document.getElementById('charCount').textContent = `${currentLength}/${CHAR_LIMIT}`;
+
             adjustChatContainerHeight();
         }
 
@@ -194,6 +215,10 @@
         function sendMessage() {
             var userInput = document.getElementById('userInput').value;
             appendMessageToHistory('You', userInput); // Append user message to history
+
+            // Reset the character counter after sending the message
+            document.getElementById('charCount').textContent = '0/' + CHAR_LIMIT;
+
             fetch('/chat', {
                 method: 'POST',
                 headers: {
@@ -212,8 +237,15 @@
             document.getElementById('userInput').value = '';
         }
 
+        function updateCharCount(length) {
+            var charCount = CHAR_LIMIT - length;
+            document.getElementById('charCount').textContent = charCount;
+        }
+
         //Initial adjustment and scroll when the page loads
         window.onload = function() {
+            document.getElementById('userInput').setAttribute('maxlength', CHAR_LIMIT);
+            document.getElementById('charCount').textContent = '0/' + CHAR_LIMIT;
             adjustChatContainerHeight();
             scrollToBottom();
         };
