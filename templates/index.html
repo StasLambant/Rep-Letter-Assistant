@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Rep Letter Assistant</title>
+    <title>Craft a letter to your elected official with the power of AI</title>
     <style>
         html, body {
             margin: 0;
@@ -63,8 +63,8 @@
             border: 0px solid #969696;
             padding: 0px;
             box-sizing: border-box;
-            word-wrap: break-word;
-            border: 1px #000; /* Ensure long words are wrapped */
+            word-wrap: break-word;/* Ensure long words are wrapped */
+            border: 1px #000; 
         }
 
         .input-container {
@@ -75,7 +75,7 @@
             width: 45%; /* Match width with chatHistory */
             display: flex;
             border: 1px solid #969696;
-            border-radius: 20px;
+            border-radius: 15px;
             padding: 0;
             align-items: flex-end;
             background: white;
@@ -88,7 +88,8 @@
             max-height: 120px;
             overflow-y: auto;
             border: none;
-            border-radius: 20px 0 0 20px;
+            border: 0px;
+            border-radius: 15px 0 0 15px;
             padding: 10px;
             resize: none;
             outline: none;
@@ -100,7 +101,7 @@
             border: none;
             background-color: #000;
             color: #fff;
-            border-radius: 50%;
+            border-radius: 30%;
             cursor: pointer;
             align-self: center;
         }
@@ -131,6 +132,46 @@
         .footer a {
             color: rgb(36, 43, 255); /* Change as needed */
         }
+
+        /* Welcome window */
+        .welcome-popup {
+        display: none; /* Hidden by default */
+        position: fixed; /* Stay in place */
+        left: 0;
+        top: 0;
+        width: 100%; /* Full width */
+        height: 100%; /* Full height */
+        overflow: auto; /* Enable scroll if needed */
+        background-color: rgb(0,0,0); /* Fallback color */
+        background-color: rgba(0, 0, 0, 0.4); /* Black w/ opacity */
+        z-index: 1001; /* Sit on top */
+        padding-top: 100px; /* Location of the box */
+        }
+
+        .welcome-content {
+            background-color: #fefefe;
+            margin: auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+            max-width: 450px; /* Adjust based on your preference */
+        }
+
+        .welcome-button {
+            display: block;
+            width: 100%;
+            padding: 10px 0;
+            margin: 10px 0 0;
+            font-size: 16px;
+            color: white;
+            background-color: #4CAF50; /* Green */
+            border: none;
+            cursor: pointer;
+        }
+
+        .welcome-button:hover {
+            background-color: #45a049;
+        }
     </style>
 </head>
 <!-- Google tag (gtag.js) -->
@@ -143,6 +184,14 @@
   gtag('config', 'G-0S9N79BY4C');
 </script>
 <body>
+        <!-- welcome popup-->
+        <div id="welcomePopup" class="welcome-popup">
+            <div class="welcome-content">
+                <p>Welcome! I will help you craft a letter </p>
+                <button onclick="goToChat()" class="welcome-button">Go to Chat</button>
+            </div>
+        </div>
+    
         <div class="header-container">
             <h3><u>AI assistant to help you write a letter to your political representative</u></h3>
         </div>
@@ -151,6 +200,7 @@
             <div class="chat-container">
                 <div id="chatHistory"></div> <!-- Chat history will be displayed here -->
             </div>
+
             <div class="input-container">
                 <textarea id="userInput" placeholder="Ask something..." maxlength="300" oninput="autoGrowTextArea(this)"></textarea>
                 <span id="charCount">0/CHAR_LIMIT</span> <!-- Character count display -->
@@ -201,12 +251,12 @@
             if (threadId) {
                 // If the message is HTML (from the bot), set innerHTML, else set textContent
                 if (isHtml) {
-                    messageElement.innerHTML = `${role} [Thread: ${threadId}]: ${message}`;
+                    messageElement.innerHTML = `${role} ${message}`;
                 } else {
-                    messageElement.textContent = `${role} [Thread: ${threadId}]: ${message}`;
+                    messageElement.textContent = `${role} ${message}`;
                 }
             } else {
-                messageElement.textContent = `${role}: ${message}`;
+                messageElement.textContent = `${role} ${message}`;
             }
             chatHistory.appendChild(messageElement);
             scrollToBottom();
@@ -257,5 +307,16 @@
         };
     </script>
 
+    <!--welcome popup script-->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('welcomePopup').style.display = 'block';
+        });
+        
+        function goToChat() {
+            document.getElementById('welcomePopup').style.display = 'none';
+            document.getElementById('textarea').focus(); // move cursor to text area input on button click
+        }
+    </script>
 </body>
 </html>

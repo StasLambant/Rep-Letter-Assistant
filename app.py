@@ -65,7 +65,7 @@ def chat():
     MAX_CHARS = 300  # Set your desired limit
 
     if len(user_input) > MAX_CHARS:
-        return jsonify({'error': 'Input exceeds the maximum allowed character limit.'}), 400
+        return jsonify({'error': 'Input exceeds the maximum allowed character limit.'}), 300
 
 
     allowed_tags = ['b', 'i', 'hr', 'p', 'br '] #Tags allowed by bleach. everything else is sanitised
