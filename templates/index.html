@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Craft a letter to your elected official with the power of AI</title>
+    <title>Dear-President.com - Craft a letter to your elected official with the power of AI</title>
     <style>
         html, body {
             margin: 0;
@@ -31,9 +31,9 @@
 
         .chat-wrapper {
             position: relative;
-            height: calc(100vh - 78px);
+            height: calc(100vh - 300px);
             width: 100%;
-            padding-top: 0px; /* Height of the header */
+            padding-top: 25px; /* Height of the header */
             padding-bottom: 0px; /* Height of the footer */
             flex-grow: 1; /* Allow this to take up available space */
             overflow: auto;
@@ -51,7 +51,7 @@
             padding-bottom: 0px; /* Initial bottom padding */
             top: 0px;
             bottom: 0px;
-            border: 0px solid #969696;
+            border: 1px solid #000000;
             height: 88%;
         }
 
@@ -65,6 +65,12 @@
             box-sizing: border-box;
             word-wrap: break-word;/* Ensure long words are wrapped */
             border: 1px #000; 
+            line-height: 1.6; /* Adjust line height for tighter text */
+        }
+
+        #chatHistory p {
+            margin: 0 0 5px 0; /* Reduce bottom margin of <p> tag to decrease spacing beween messages */
+            line-height: 1.6; /* Adjust line height for tighter text */
         }
 
         .input-container {
@@ -87,8 +93,7 @@
             min-height: 20px;
             max-height: 120px;
             overflow-y: auto;
-            border: none;
-            border: 0px;
+            border: 0px solid #000000;
             border-radius: 15px 0 0 15px;
             padding: 10px;
             resize: none;
@@ -103,7 +108,8 @@
             color: #fff;
             border-radius: 30%;
             cursor: pointer;
-            align-self: center;
+            align-self: bottom;
+            margin: 5px;
         }
 
         button:hover {
@@ -153,24 +159,26 @@
             margin: auto;
             padding: 20px;
             border: 1px solid #888;
-            width: 80%;
-            max-width: 450px; /* Adjust based on your preference */
+            width: 100%;
+            max-width: 700px;
         }
 
         .welcome-button {
             display: block;
-            width: 100%;
-            padding: 10px 0;
-            margin: 10px 0 0;
+            width: 200px;
+            height:35px;
+            padding: 0px;
+            margin: 0px;
             font-size: 16px;
-            color: white;
-            background-color: #4CAF50; /* Green */
-            border: none;
+            color: rgb(0, 0, 0);
+            background-color: #d6a787; /* Green */
+            border: 1px solid #000000;
+            border-radius: 5px;
             cursor: pointer;
         }
 
         .welcome-button:hover {
-            background-color: #45a049;
+            background-color: #a8724f;
         }
     </style>
 </head>
@@ -188,13 +196,14 @@
         <div id="welcomePopup" class="welcome-popup">
             <div class="welcome-content">
                 <p>Welcome! I will help you craft a letter </p>
-                <button onclick="goToChat()" class="welcome-button">Go to Chat</button>
+                <button onclick="goToChat()" class="welcome-button">Take me to assistant</button><button onclick="goToChat()" class="welcome-button">Is my data safe?</button>
+                <button onclick="goToChat()" class="welcome-button">How does this work?</button>
             </div>
         </div>
     
-        <div class="header-container">
+        <!--<div class="header-container">
             <h3><u>AI assistant to help you write a letter to your political representative</u></h3>
-        </div>
+        </div>-->
 
         <div class="chat-wrapper">    
             <div class="chat-container">
@@ -202,7 +211,7 @@
             </div>
 
             <div class="input-container">
-                <textarea id="userInput" placeholder="Ask something..." maxlength="300" oninput="autoGrowTextArea(this)"></textarea>
+                <textarea id="userInput" placeholder="Message assistant..." maxlength="300" oninput="autoGrowTextArea(this)"></textarea>
                 <span id="charCount">0/CHAR_LIMIT</span> <!-- Character count display -->
                 <button onclick="sendMessage()">&#x2B06;</button> <!-- Unicode up-pointing arrow -->
             </div>
@@ -236,7 +245,7 @@
 
         function adjustChatContainerHeight() {
             const inputContainerHeight = document.querySelector('.input-container').offsetHeight;
-            const chatContainer = document.getElementById('chatContainer');
+            const chatContainer = document.getElementById('chatHistory');
             chatContainer.style.paddingBottom = `${inputContainerHeight + 20}px`;
         }
 
@@ -247,25 +256,36 @@
 
         function appendMessageToHistory(role, message, threadId, isHtml = false) {
             const chatHistory = document.getElementById('chatHistory');
-            const messageElement = document.createElement('p');
-            if (threadId) {
-                // If the message is HTML (from the bot), set innerHTML, else set textContent
-                if (isHtml) {
-                    messageElement.innerHTML = `${role} ${message}`;
-                } else {
-                    messageElement.textContent = `${role} ${message}`;
-                }
-            } else {
-                messageElement.textContent = `${role} ${message}`;
+            const messageElement = document.createElement('div'); // Use 'div' for better structure
+            let contentHtml = `<strong>${role}</strong><p>`;
+
+            if (role === 'You') { // Check if the sender is 'You' (the user)
+                contentHtml += '<p>'; // Add extra line break for user messages
             }
+
+            if (isHtml) {
+                contentHtml += message;
+            } else {
+                const textNode = document.createTextNode(message); // Safely handle text content
+                const tempDiv = document.createElement('div');
+                tempDiv.appendChild(textNode);
+                contentHtml += tempDiv.innerHTML; // Append the safe text content
+            }
+            messageElement.innerHTML = contentHtml;
             chatHistory.appendChild(messageElement);
+
+            // Add two line breaks after each message for spacing
+            const breakElement = document.createElement('div');
+            breakElement.innerHTML = "<br>";
+            chatHistory.appendChild(breakElement);
+
             scrollToBottom();
         }
+
 
         function sendMessage() {
             var userInput = document.getElementById('userInput').value;
             appendMessageToHistory('You', userInput); // Append user message to history
-
             // Reset the character counter after sending the message
             document.getElementById('charCount').textContent = '0/' + CHAR_LIMIT;
 
@@ -278,6 +298,7 @@
             })
             .then(response => response.json())
             .then(data => {
+                // Use typeMessage for bot responses
                 appendMessageToHistory('Bot', data.response || 'Error: No response', data.thread_id, true); // Append bot response to history as HTML
                 document.getElementById('userInput').style.height = '20px'; // Reset textarea height
             })
@@ -298,6 +319,10 @@
             document.getElementById('charCount').textContent = '0/' + CHAR_LIMIT;
             adjustChatContainerHeight();
             scrollToBottom();
+            // Delay setting focus to ensure the page is fully loaded
+            setTimeout(function() {
+                document.getElementById('userInput').focus(); // Place cursor in input box
+            }, 100); 
         };
 
         //Adjust and scroll when window is resized
@@ -307,7 +332,7 @@
         };
     </script>
 
-    <!--welcome popup script-->
+    <!--welcome popup script. Commented out for testing
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             document.getElementById('welcomePopup').style.display = 'block';
@@ -315,8 +340,9 @@
         
         function goToChat() {
             document.getElementById('welcomePopup').style.display = 'none';
-            document.getElementById('textarea').focus(); // move cursor to text area input on button click
+            document.getElementById('UserInput').focus(); // move cursor to text area input on button click
         }
+        -->
     </script>
 </body>
 </html>
