@@ -68,7 +68,7 @@ def chat():
         return jsonify({'error': 'Input exceeds the maximum allowed character limit.'}), 300
 
 
-    allowed_tags = ['b', 'i', 'hr', 'p', 'br '] #Tags allowed by bleach. everything else is sanitised
+    allowed_tags = ['b', 'i', 'hr', 'p', 'br ', 'n'] #Tags allowed by bleach. everything else is sanitised
     sanitised_input = bleach.clean(user_input, tags = allowed_tags) #Sanitize user input to prevent malicious html insert
 
     app.logger.info(f"Received request: {sanitised_input}")  # Log the received message
