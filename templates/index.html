@@ -51,7 +51,7 @@
             padding-bottom: 0px; /* Initial bottom padding */
             top: 0px;
             bottom: 0px;
-            border: 1px solid #000000;
+            border: 0px solid #000000;
             height: 88%;
         }
 
@@ -60,11 +60,10 @@
             height: 100%;
             width: 100%;
             overflow-y: auto;
-            border: 0px solid #969696;
+            border: 0px solid #000000;
             padding: 0px;
             box-sizing: border-box;
             word-wrap: break-word;
-            border: 0px #000; 
             line-height: 1.6; /* Adjust line height for tighter text */
         }
 
@@ -86,23 +85,29 @@
             align-items: flex-end;
             background: white;
             z-index: 1000;
+            min-height: 35px;
+            max-height: 133px;
         }
 
         textarea {
             flex-grow: 1;
-            min-height: 20px;
+            height: 22px;
+            min-height: 22px;
             max-height: 120px;
             overflow-y: auto;
-            border: 0px solid #000000;
+            border: 1px solid #000000;
             border-radius: 15px 0 0 15px;
             padding: 10px;
             resize: none;
             outline: none;
+            /*text-align: start;
+            /*vertical-align: middle;*/
+
         }
 
         button {
-            width: 40px;
-            height: 40px;
+            width: 35px;
+            height: 35px;
             border: none;
             background-color: #000;
             color: #fff;
@@ -127,14 +132,14 @@
                 opacity: 0;
             }
             to {
-                max-height: 500px; /* Message height */
+                max-height: 10000px; /* Message height */
                 opacity: 1;
             }
         }
 
         .message-container {
             overflow: hidden;
-            max-height: 500px; /* Message height */
+            max-height: 10000px; /* Message height */
             animation: revealMessage 1s ease-out forwards; /* Reveal duration */
         }
         
@@ -264,7 +269,7 @@
 
         function adjustChatContainerHeight() {
             const inputContainerHeight = document.querySelector('.input-container').offsetHeight;
-            const chatContainer = document.getElementById('chatHistory');
+            const chatContainer = document.getElementById('chatContainer');
             chatContainer.style.paddingBottom = `${inputContainerHeight + 20}px`;
         }
 
@@ -294,19 +299,23 @@
             }
             messageWrapper.innerHTML = contentHtml;
             chatHistory.appendChild(messageWrapper);
-
+            
             // Add two line breaks after each message for spacing
-            //const breakElement = document.createElement('div');
-            //breakElement.innerHTML = "<br>";
-            //chatHistory.appendChild(breakElement);
-
-            scrollToBottom();
-        }
-
+            const breakElement = document.createElement('div');
+            breakElement.innerHTML = "<br>";
+            chatHistory.appendChild(breakElement);
+            
+            // Delay the scrollToBottom to allow animation to finish
+            setTimeout(() => {
+                scrollToBottom();
+            }, 110);
+}
 
         function sendMessage() {
             var userInput = document.getElementById('userInput').value;
             appendMessageToHistory('You', userInput); // Append user message to history
+            
+            document.getElementById('userInput').style.height = '20px'; // Reset textarea height
             // Reset the character counter after sending the message
             document.getElementById('charCount').textContent = '0/' + CHAR_LIMIT;
 
@@ -340,10 +349,11 @@
             document.getElementById('charCount').textContent = '0/' + CHAR_LIMIT;
             adjustChatContainerHeight();
             scrollToBottom();
+            
             // Delay setting focus to ensure the page is fully loaded
             setTimeout(function() {
                 document.getElementById('userInput').focus(); // Place cursor in input box
-            }, 100); 
+            }, 300); 
         };
 
         //Adjust and scroll when window is resized
