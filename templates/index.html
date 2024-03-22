@@ -1,7 +1,10 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Dear-President.com - Craft a letter to your elected official with the power of AI</title>
+
+    <!-- Start cookieyes banner --> <script id="cookieyes" type="text/javascript" src="https://cdn-cookieyes.com/client_data/34ee5cbe317bd92af950ceb3/script.js"></script> <!-- End cookieyes banner -->
+    <title>Dear-President.com - Craft a letter to your elected official</title>
+    
     <style>
         html, body {
             margin: 0;
@@ -68,7 +71,7 @@
         }
 
         #chatHistory p {
-            margin: 0 0 5px 0; /* Reduce bottom margin of <p> tag to decrease spacing beween messages */
+            margin: 0 0 5px 26px; /* Reduce bottom margin of <p> tag to decrease spacing beween messages */
             line-height: 1.6; /* Adjust line height for tighter text */
         }
 
@@ -95,7 +98,7 @@
             min-height: 22px;
             max-height: 120px;
             overflow-y: auto;
-            border: 1px solid #000000;
+            border: 0px solid #000000;
             border-radius: 15px 0 0 15px;
             padding: 10px;
             resize: none;
@@ -137,7 +140,7 @@
             }
         }
 
-        .message-container {
+        .animated-message-content {
             overflow: hidden;
             max-height: 10000px; /* Message height */
             animation: revealMessage 1s ease-out forwards; /* Reveal duration */
@@ -184,6 +187,7 @@
             border: 1px solid #888;
             width: 100%;
             max-width: 700px;
+            text-align: center;
         }
 
         .welcome-button {
@@ -191,17 +195,25 @@
             width: 200px;
             height:35px;
             padding: 0px;
-            margin: 0px;
+            margin: 0px auto;
             font-size: 16px;
             color: rgb(0, 0, 0);
-            background-color: #d6a787; /* Green */
+            background-color: #d6a787;
             border: 1px solid #000000;
             border-radius: 5px;
             cursor: pointer;
+            display: block;
         }
 
         .welcome-button:hover {
             background-color: #a8724f;
+        }
+
+        .message-icon {
+            height: 20px;
+            width: 20px;
+            vertical-align: middle;
+            margin-right: 5px;
         }
 
     </style>
@@ -217,13 +229,15 @@
 </script>
 <body>
         <!-- welcome popup-->
-        <div id="welcomePopup" class="welcome-popup">
+        <!-- <div id="welcomePopup" class="welcome-popup">
             <div class="welcome-content">
-                <p>Welcome! I will help you craft a letter </p>
-                <button onclick="goToChat()" class="welcome-button">Take me to assistant</button><button onclick="goToChat()" class="welcome-button">Is my data safe?</button>
-                <button onclick="goToChat()" class="welcome-button">How does this work?</button>
-            </div>
-        </div>
+                <p>Welcome! 
+                <p>Dear President is an AI-powered chatbot that helps you craft a letter to your elected official. <p>Whether you're writing to your local council, or a Head of State, Dear-president is your helpful writing guide.</p><br>
+                <button onclick="sendLetsGoMessage()" class="welcome-button">Let's go</button>
+                <!--<button onclick="sendIsMyDataSafeMessage()" class="welcome-button">Is my data safe?</button>
+                <button onclick="sendHowDoesThisWorkMessage()" class="welcome-button">How does this work?</button>-->
+           <!-- </div>
+        </div>-->
     
         <!--<div class="header-container">
             <h3><u>AI assistant to help you write a letter to your political representative</u></h3>
@@ -278,26 +292,29 @@
             chatHistory.scrollTop = chatHistory.scrollHeight;
         };
 
-        function appendMessageToHistory(role, message, isHtml = false) {
+        function appendMessageToHistory(role, message, isHtml = false, messageId=null) {
             const chatHistory = document.getElementById('chatHistory');
             const messageWrapper = document.createElement('div'); // Create a wrapper div for the message
-            messageWrapper.classList.add('message-container'); // Apply animation class
-            
-            let contentHtml = `<strong>${role}</strong><p>`;
 
-            if (role === 'You') { // Check if the sender is 'You' (the user)
-                contentHtml += '<p>'; // Add extra line break for user messages
-            }
+            let iconSrc; // Source of the icon
 
-            if (isHtml) {
-                contentHtml += message;
+            if (role === 'Bot') {
+                //iconSrc = '/images/bot_icon.png'
+                // For bot messages, wrap the message content in a div that will have the animation
+                const animatedMessageContent = document.createElement('div');
+                animatedMessageContent.classList.add('animated-message-content'); // Apply animation class here
+                let contentHtml = isHtml ? message : escapeHtml(message);
+                animatedMessageContent.innerHTML = `<img src="/static/images/bot_icon.png" style="height: 20px;" alt="Bot icon" class="message-icon"><strong>${role}</strong><p>${contentHtml}</p>`;
+                messageWrapper.appendChild(animatedMessageContent);
             } else {
-                const textNode = document.createTextNode(message); // Safely handle text content
-                const tempDiv = document.createElement('div');
-                tempDiv.appendChild(textNode);
-                contentHtml += tempDiv.innerHTML; // Append the safe text content
+                // For user messages display without animation
+                messageWrapper.innerHTML = `<img src="/static/images/user_icon.png" style="height: 20px;" alt="User icon" class="message-icon"><strong>${role}</strong><p>${escapeHtml(message)}</p>`;
             }
-            messageWrapper.innerHTML = contentHtml;
+
+            if (messageId) {
+                messageWrapper.id = messageId;
+            }
+
             chatHistory.appendChild(messageWrapper);
             
             // Add two line breaks after each message for spacing
@@ -308,16 +325,31 @@
             // Delay the scrollToBottom to allow animation to finish
             setTimeout(() => {
                 scrollToBottom();
-            }, 110);
-}
+            }, 300);
+        }
+
+        // Helper function to escape HTML characters in user input or bot messages
+        function escapeHtml(text) {
+            var map = {
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#039;'
+            };
+            return text.replace(/[&<>"']/g, function(m) { return map[m]; });
+        }
 
         function sendMessage() {
             var userInput = document.getElementById('userInput').value;
             appendMessageToHistory('You', userInput); // Append user message to history
-            
+
+            // Placeholder message for bot processing
+            const processingMessageId = `processing-${new Date().getTime()}`;
+            appendMessageToHistory('Bot', 'Thinking...', false, processingMessageId); // Use a unique ID for the processing message
+
             document.getElementById('userInput').style.height = '20px'; // Reset textarea height
-            // Reset the character counter after sending the message
-            document.getElementById('charCount').textContent = '0/' + CHAR_LIMIT;
+            document.getElementById('charCount').textContent = '0/' + CHAR_LIMIT; // Reset the character counter after sending the message
 
             fetch('/chat', {
                 method: 'POST',
@@ -328,12 +360,35 @@
             })
             .then(response => response.json())
             .then(data => {
-                // Use typeMessage for bot responses
-                appendMessageToHistory('Bot', data.response || 'Error: No response', data.thread_id, true); // Append bot response to history as HTML
+                // Replace processing message with actual response
+                const processingMessage = document.getElementById(processingMessageId);
+                if (processingMessage) {
+                    // re-trigger animation for real message. Step 1- remove the animation class
+                    processingMessage.classList.remove('animated-message-content');
+                    
+                    // re-trigger animation for real message. Step 2- trigger a reflow/repaint
+                    void processingMessage.offsetWidth;
+                    
+                    //process message
+                    processingMessage.innerHTML = `<img src="/static/images/bot_icon.png" style="height: 20px;" alt="Bot icon" class="message-icon"><strong>Bot</strong><p>${data.response || 'Error: No response'}</p>`; // Update the message content
+                    scrollToBottom();
+                    // re-trigger animation for real message. Step 3- reload animation class
+                    processingMessage.classList.add('animated-message-content');
+                    
+                } else {
+                    // Fallback in case the placeholder could not be found
+                    appendMessageToHistory('Bot', data.response || 'Error: No response', true); // Append bot response to history as HTML
+                    scrollToBottom();
+                }
                 document.getElementById('userInput').style.height = '20px'; // Reset textarea height
             })
-            .catch(error => console.error('Error:', error));
-
+            .catch(error => {
+                console.error('Error:', error);
+                const processingMessage = document.getElementById(processingMessageId);
+                if (processingMessage) {
+                    processingMessage.innerHTML = `<strong>Bot</strong><p>Error processing your request.</p>`; // Show error in place of processing message
+                }
+            });
             // Clear input field after sending the message
             document.getElementById('userInput').value = '';
         }
@@ -363,17 +418,39 @@
         };
     </script>
 
-    <!--welcome popup script. Commented out for testing
+    
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             document.getElementById('welcomePopup').style.display = 'block';
         });
         
-        function goToChat() {
+        function sendLetsGoMessage() {
             document.getElementById('welcomePopup').style.display = 'none';
-            document.getElementById('UserInput').focus(); // move cursor to text area input on button click
+            document.getElementById('userInput').value = "Let's go";
+            sendMessage();
+            setTimeout(() => {
+                document.getElementById('userInput').focus();
+            }, 100);
         }
-        -->
+        
+        function sendIsMyDataSafeMessage() {
+            document.getElementById('welcomePopup').style.display = 'none';
+            document.getElementById('userInput').value = "Is my data safe?";
+            sendMessage();
+            setTimeout(() => {
+                document.getElementById('userInput').focus();
+            }, 100);
+        }
+
+        function sendHowDoesThisWorkMessage() {
+            document.getElementById('welcomePopup').style.display = 'none';
+            document.getElementById('userInput').value = "How does this work?";
+            sendMessage();
+            setTimeout(() => {
+                document.getElementById('userInput').focus();
+            }, 100);
+        }
+        
     </script>
 </body>
 </html>

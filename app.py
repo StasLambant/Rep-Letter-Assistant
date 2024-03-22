@@ -5,6 +5,7 @@ import os
 import time
 import markdown
 import bleach
+import json
 from utils.token_counter import count_thread_tokens
 
 app = Flask(__name__)
@@ -53,6 +54,14 @@ def check_status(run_id, thread_id):
     )
     return run.status
 
+#list run steps
+def get_run_steps(thread_id, run_id):
+    run_steps= client.beta.threads.runs.steps.list(
+    thread_id=thread_id,
+    run_id=run_id,
+    )
+    return run_steps
+
 @app.route('/')
 def home():
     return render_template('index.html')
@@ -78,21 +87,30 @@ def chat():
         assistant_id = "asst_JZnFQkifZLY3r1C5uaL1cgpg"  # Replace with environment variable
         my_run_id, my_thread_id = create_thread(assistant_id, sanitised_input)
 
-        status = check_status(my_run_id, my_thread_id)
+        run_status = check_status(my_run_id, my_thread_id)
 
-        while status in ['queued', 'in_progress']:
-            status = check_status(my_run_id, my_thread_id)
+        while run_status in ['queued', 'in_progress']:
+            run_status = check_status(my_run_id, my_thread_id)
             time.sleep(1)
+
+        if run_status == 'requires_action':
+            steps_output = get_run_steps(my_thread_id, my_run_id)
+            
+            # Extract function name and arguments
+            step_details = steps_output.data[0].step_details.tool_calls[0]
+            gpt_function_name = step_details.function.name
+            user_address = json.loads(step_details.function.arguments)["location"]
+
+            app.logger.info(f"Function name: {gpt_function_name}")
+            app.logger.info(f"User address: {user_address}")
 
         response = client.beta.threads.messages.list(
             thread_id=my_thread_id
-        
         )
-        
+     
         if response.data:
             chat_response = response.data[0].content[0].text.value
             chat_response_html = markdown.markdown(chat_response, extensions=['nl2br']) #Convert markdown to HTML with nl2br extension to handle conversion of single new lines (\n) into breaks and double new lines (\n\n) into paragraph breaks.
-            #chat_response_html = bleach.clean(chat_response_markdown, tags=allowed_tags)#Sanitize user input to prevent malicious html insert
 
             #count total tokens in a thread
             encoding_name = 'cl100k_base'
