@@ -7,6 +7,8 @@ import markdown
 import bleach
 import json
 from utils.token_counter import count_thread_tokens
+from api.google_civic_api import get_representatives
+
 
 app = Flask(__name__)
 
@@ -54,13 +56,16 @@ def check_status(run_id, thread_id):
     )
     return run.status
 
-#list run steps
+#list run steps. steps used to identify function and function arguments being ran by the bot.
 def get_run_steps(thread_id, run_id):
     run_steps= client.beta.threads.runs.steps.list(
     thread_id=thread_id,
     run_id=run_id,
     )
     return run_steps
+
+
+
 
 @app.route('/')
 def home():
@@ -76,7 +81,6 @@ def chat():
     if len(user_input) > MAX_CHARS:
         return jsonify({'error': 'Input exceeds the maximum allowed character limit.'}), 300
 
-
     allowed_tags = ['b', 'i', 'hr', 'p', 'br ', 'n'] #Tags allowed by bleach. everything else is sanitised
     sanitised_input = bleach.clean(user_input, tags = allowed_tags) #Sanitize user input to prevent malicious html insert
 
@@ -84,8 +88,12 @@ def chat():
     print("Received request:", request.json) # Prints the received message in dev mode only.
 
     try:
-        assistant_id = "asst_JZnFQkifZLY3r1C5uaL1cgpg"  # Replace with environment variable
+        assistant_id = "asst_QYgQz5e5ru1kQFn6JeRXiTnS"  # Replace with environment variable in prod
         my_run_id, my_thread_id = create_thread(assistant_id, sanitised_input)
+
+        response = client.beta.threads.messages.list(
+            thread_id=my_thread_id
+        )
 
         run_status = check_status(my_run_id, my_thread_id)
 
@@ -94,20 +102,65 @@ def chat():
             time.sleep(1)
 
         if run_status == 'requires_action':
-            steps_output = get_run_steps(my_thread_id, my_run_id)
+            steps_output = get_run_steps(my_thread_id, my_run_id) #Call function to fetch steps.
             
             # Extract function name and arguments
             step_details = steps_output.data[0].step_details.tool_calls[0]
             gpt_function_name = step_details.function.name
-            user_address = json.loads(step_details.function.arguments)["location"]
+            gpt_tool_call_id = step_details.id
+            gpt_function_arguments = json.loads(step_details.function.arguments)
+        
+            #fixed ressponse for testing purposes. replace with API call to google.
+            if gpt_function_name == "get_rep_details" and (gpt_function_arguments.get('country') == 'US' or gpt_function_arguments.get('country') == 'USA'):
+                client.beta.threads.runs.submit_tool_outputs(
+                thread_id=my_thread_id,
+                run_id=my_run_id,
+                tool_outputs=[
+                    {
+                        "tool_call_id": gpt_tool_call_id,
+                        "output": "1 high street, California"
+                    }
+                ]
+                )
+            else:
+                client.beta.threads.runs.submit_tool_outputs(
+                thread_id=my_thread_id,
+                run_id=my_run_id,
+                tool_outputs=[
+                    {
+                        "tool_call_id": gpt_tool_call_id,
+                        "output": "Could not find requested details. This feature is only available for US postcodes at the moment."
+                    }
+                ]
+                )
+            run_status = check_status(my_run_id, my_thread_id)
+            while run_status in ['queued', 'in_progress']:
+                run_status = check_status(my_run_id, my_thread_id)
+                time.sleep(1)
 
-            app.logger.info(f"Function name: {gpt_function_name}")
-            app.logger.info(f"User address: {user_address}")
+            response = client.beta.threads.messages.list(
+                thread_id=my_thread_id
+            )
 
-        response = client.beta.threads.messages.list(
-            thread_id=my_thread_id
-        )
-     
+        else:
+            #For debugging. Remove after function calling is implemented.
+            #app.logger.info(f"Function name: {gpt_function_name}")
+            #app.logger.info(f"Function arguments: {gpt_function_arguments}")
+            #app.logger.info(f"Function tool call id: {gpt_tool_call_id}")
+
+            #Run message status check againfollowing 
+            run_status = check_status(my_run_id, my_thread_id)
+            while run_status in ['queued', 'in_progress']:
+                run_status = check_status(my_run_id, my_thread_id)
+                time.sleep(1)
+
+            response = client.beta.threads.messages.list(
+                thread_id=my_thread_id
+            )
+
+        app.logger.info(f"updated message content: {response}")
+        print(response)
+
         if response.data:
             chat_response = response.data[0].content[0].text.value
             chat_response_html = markdown.markdown(chat_response, extensions=['nl2br']) #Convert markdown to HTML with nl2br extension to handle conversion of single new lines (\n) into breaks and double new lines (\n\n) into paragraph breaks.
